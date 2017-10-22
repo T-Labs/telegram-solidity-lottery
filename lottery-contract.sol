@@ -242,3 +242,55 @@ contract MyAdvancedToken is owned, TokenERC20 {
         msg.sender.transfer(amount * sellPrice);          // sends ether to the seller. It's important to do this last to avoid recursion attacks
     }
 }
+
+contract SimpleFairLottery is MyAdvancedToken{
+    uint public countTickets = 100;
+    uint JackPot =0;
+    address[100] public tickets;
+    uint public ticketPrice =10;
+    uint public toJackPotfromEveryTicket = 4;
+    uint public xPrize =4;
+    uint public lastWinNumber;
+    
+    function clearTickets() private {
+        for(uint i=0; i< countTickets; i++)
+        tickets[i]=0;
+    }
+    
+    function SimpleFairLottery() MyAdvancedToken(countTickets*ticketPrice, "Simple Lottery Token", "SLT") public {
+        clearTickets();
+    }
+    
+    function buyTicket(uint ticketNum) public returns(bool success){
+        if((ticketNum<0)|| ticketNum>=countTickets) return false;
+        if (balanceOf[msg.sender] < ticketPrice) return false;
+        if(tickets[ticketNum]!=0) return false;
+        balanceOf[msg.sender] -= ticketPrice;
+        JackPot += toJackPotfromEveryTicket;
+        tickets[ticketNum] = msg.sender;
+        return true;
+    }
+    
+    function play() onlyOwner public {
+        lastWinNumber = uint(block.blockhash(block.number - 1)) % countTickets +1;
+        if(tickets[lastWinNumber]!=0){
+            balanceOf[tickets[lastWinNumber]] +=JackPot;
+            JackPot = 0;
+        }
+        
+        uint i1 = lastWinNumber - (lastWinNumber%10);
+        for (uint i = i1; i<i1+10;i++)
+        balanceOf[tickets[i]] +=ticketPrice*xPrize;
+        
+        clearTickets();
+    }
+    
+    function setLotteryParameters(uint newTicketPrice, uint newToJackPotfromEveryTicket, uint newXPrize) onlyOwner public{
+        ticketPrice = newTicketPrice;
+        toJackPotfromEveryTicket = newToJackPotfromEveryTicket;
+        xPrize = newXPrize;
+    }
+    
+}
+
+

@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-
 import telebot
 import config
 from eth_rpc_client import Client
-
 
 bot = telebot.TeleBot(config.token)
 
